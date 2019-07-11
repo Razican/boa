@@ -53,7 +53,7 @@ pub fn exec(src: &str) -> String {
     // Setup executor
     let expr = Parser::new(tokens).parse_all().unwrap();
 
-    let mut engine: Interpreter = Executor::new();
+    let mut engine = Interpreter::default();
     let result = engine.run(&expr);
     match result {
         Ok(v) => v.to_string(),
@@ -84,7 +84,7 @@ pub fn evaluate(src: &str) -> String {
         }
     }
 
-    let mut engine: Interpreter = Executor::new();
+    let mut engine = Interpreter::default();
     let result = engine.run(&expr);
     match result {
         Ok(v) => v.to_string(),

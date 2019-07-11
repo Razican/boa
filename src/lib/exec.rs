@@ -1,31 +1,39 @@
-use crate::environment::lexical_environment::{new_function_environment, LexicalEnvironment};
-use crate::js::function::{Function, RegularFunction};
-use crate::js::object::{INSTANCE_PROTOTYPE, PROTOTYPE};
-use crate::js::value::{from_value, to_value, ResultValue, ValueData};
-use crate::js::{array, console, function, json, math, object, string};
-use crate::syntax::ast::constant::Const;
-use crate::syntax::ast::expr::{Expr, ExprDef};
-use crate::syntax::ast::op::{BinOp, BitOp, CompOp, LogOp, NumOp, UnaryOp};
+use crate::{
+    environment::lexical_environment::{new_function_environment, LexicalEnvironment},
+    js::{
+        array, console, function,
+        function::{Function, RegularFunction},
+        json, math, object,
+        object::{INSTANCE_PROTOTYPE, PROTOTYPE},
+        string,
+        value::{from_value, to_value, ResultValue, Value, ValueData},
+    },
+    syntax::ast::{
+        constant::Const,
+        expr::{Expr, ExprDef},
+        op::{BinOp, BitOp, CompOp, LogOp, NumOp, UnaryOp},
+    },
+};
 use gc::{Gc, GcCell};
 use std::borrow::Borrow;
 
 /// An execution engine
 pub trait Executor {
-    /// Make a new execution engine
-    fn new() -> Self;
     /// Run an expression
     fn run(&mut self, expr: &Expr) -> ResultValue;
+    /// Gets the global context
+    fn global_object(&self) -> Option<Value>;
 }
 
-/// A Javascript intepreter
+/// A Javascript interpreter
 #[derive(Debug)]
 pub struct Interpreter {
     /// An object representing the global object
     environment: LexicalEnvironment,
 }
 
-impl Executor for Interpreter {
-    fn new() -> Self {
+impl Default for Interpreter {
+    fn default() -> Self {
         let global = ValueData::new_obj(None);
         object::init(&global);
         console::init(&global);
@@ -35,10 +43,12 @@ impl Executor for Interpreter {
         json::init(&global);
         string::init(&global);
         Self {
-            environment: LexicalEnvironment::new(global.clone()),
+            environment: LexicalEnvironment::new(global),
         }
     }
+}
 
+impl Executor for Interpreter {
     #[allow(clippy::match_same_arms)]
     fn run(&mut self, expr: &Expr) -> ResultValue {
         match expr.def {
@@ -47,7 +57,7 @@ impl Executor for Interpreter {
             ExprDef::ConstExpr(Const::Num(num)) => Ok(to_value(num)),
             ExprDef::ConstExpr(Const::Int(num)) => Ok(to_value(num)),
             // we can't move String from Const into value, because const is a garbage collected value
-            // Which means Drop() get's called on Const, but str will be gone at that point.
+            // Which means Drop() gets called on Const, but str will be gone at that point.
             // Do Const values need to be garbage collected? We no longer need them once we've generated Values
             ExprDef::ConstExpr(Const::String(ref str)) => Ok(to_value(str.to_owned())),
             ExprDef::ConstExpr(Const::Bool(val)) => Ok(to_value(val)),
@@ -386,5 +396,9 @@ impl Executor for Interpreter {
                 }))
             }
         }
+    }
+
+    fn global_object(&self) -> Option<Value> {
+        self.environment.get_global_object()
     }
 }
