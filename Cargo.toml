@@ -11,7 +11,8 @@ exclude = [".vscode/*", "Dockerfile", "Makefile", ".editorConfig"]
 edition = "2018"
 
 [features]
-default = ["wasm-bindgen"]
+default = ["wasm"]
+wasm = ["wasm-bindgen"]
 
 [dependencies]
 gc = "0.3.3"

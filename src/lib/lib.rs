@@ -11,11 +11,9 @@
     trivial_numeric_casts
 )]
 // Debug trait derivation will show an error if forbidden.
-#![deny(unused_qualifications)]
-#![deny(clippy::all)]
-#![warn(clippy::pedantic)]
+#![deny(clippy::all, unused_qualifications)]
+#![warn(clippy::pedantic, unsafe_code)]
 #![allow(
-    unsafe_code,
     clippy::many_single_char_names,
     clippy::unreadable_literal,
     clippy::excessive_precision,
@@ -35,9 +33,12 @@ pub mod syntax;
 use crate::exec::{Executor, Interpreter};
 use crate::syntax::lexer::Lexer;
 use crate::syntax::parser::Parser;
+
+#[cfg(features = "wasm")]
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg(features = "wasm")]
+#[cfg_attr(features = "wasm", wasm_bindgen)]
 extern "C" {
     // Use `js_namespace` here to bind `console.log(..)` instead of just
     // `log(..)`
@@ -61,7 +62,8 @@ pub fn exec(src: &str) -> String {
     }
 }
 
-#[wasm_bindgen]
+#[cfg(features = "wasm")]
+#[cfg_attr(features="wasm", wasm_bindgen)]
 pub fn evaluate(src: &str) -> String {
     let mut lexer = Lexer::new(&src);
     match lexer.lex() {
