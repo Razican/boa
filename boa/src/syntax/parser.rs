@@ -218,7 +218,13 @@ impl Parser {
 
                 Ok(Expr::new(ExprDef::ConstDecl(vars)))
             }
-            Keyword::Return => Ok(Expr::new(ExprDef::Return(Some(Box::new(self.parse()?))))),
+            Keyword::Return => match self.get_token(self.pos)?.data {
+                TokenData::Punctuator(Punctuator::Semicolon)
+                | TokenData::Punctuator(Punctuator::CloseBlock) => {
+                    Ok(Expr::new(ExprDef::Return(None)))
+                }
+                _ => Ok(Expr::new(ExprDef::Return(Some(Box::new(self.parse()?))))),
+            },
             Keyword::New => {
                 let call = self.parse()?;
                 match call.def {
@@ -1539,6 +1545,28 @@ mod tests {
         );
 
         check_parser(
+            "function foo(a) { return; }",
+            &[Expr::new(ExprDef::FunctionDecl(
+                Some(String::from("foo")),
+                vec![Expr::new(ExprDef::Local(String::from("a")))],
+                Box::new(Expr::new(ExprDef::Block(vec![Expr::new(ExprDef::Return(
+                    None,
+                ))]))),
+            ))],
+        );
+
+        check_parser(
+            "function foo(a) { return }",
+            &[Expr::new(ExprDef::FunctionDecl(
+                Some(String::from("foo")),
+                vec![Expr::new(ExprDef::Local(String::from("a")))],
+                Box::new(Expr::new(ExprDef::Block(vec![Expr::new(ExprDef::Return(
+                    None,
+                ))]))),
+            ))],
+        );
+
+        check_parser(
             "function (a, ...b) {}",
             &[Expr::new(ExprDef::FunctionDecl(
                 None,
@@ -1592,6 +1620,32 @@ mod tests {
                         Expr::new(ExprDef::Local(String::from("a"))),
                         Expr::new(ExprDef::Local(String::from("b"))),
                     ))),
+                ))]))),
+            ))],
+        );
+
+        check_parser(
+            "(a, b) => { return; }",
+            &[Expr::new(ExprDef::ArrowFunctionDecl(
+                vec![
+                    Expr::new(ExprDef::Local(String::from("a"))),
+                    Expr::new(ExprDef::Local(String::from("b"))),
+                ],
+                Box::new(Expr::new(ExprDef::Block(vec![Expr::new(ExprDef::Return(
+                    None,
+                ))]))),
+            ))],
+        );
+
+        check_parser(
+            "(a, b) => { return }",
+            &[Expr::new(ExprDef::ArrowFunctionDecl(
+                vec![
+                    Expr::new(ExprDef::Local(String::from("a"))),
+                    Expr::new(ExprDef::Local(String::from("b"))),
+                ],
+                Box::new(Expr::new(ExprDef::Block(vec![Expr::new(ExprDef::Return(
+                    None,
                 ))]))),
             ))],
         );
