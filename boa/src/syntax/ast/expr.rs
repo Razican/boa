@@ -76,19 +76,12 @@ pub enum ExprDef {
     LetDecl(Vec<(String, Option<Expr>)>),
     /// Return a string representing the type of the given expression
     TypeOf(Box<Expr>),
-<<<<<<< HEAD
-    /// A catch block, with its optional exception variable.
-    CatchBlock(Option<Box<Expr>>, Box<Expr>),
-    /// Try...cath...finally block.
-    TryCatch(Box<Expr>, Vec<Expr>, Option<Box<Expr>>),
-=======
     /// Try...catch...finally block.
     TryCatch(
         Box<Expr>,
         Option<(Option<String>, Box<Expr>)>,
         Option<Box<Expr>>,
     ),
->>>>>>> try_catch
 }
 
 impl Operator for ExprDef {
@@ -234,19 +227,6 @@ impl Display for ExprDef {
                 Ok(())
             }
             ExprDef::TypeOf(ref e) => write!(f, "typeof {}", e),
-<<<<<<< HEAD
-            ExprDef::CatchBlock(ref exc, ref block) => {
-                f.write_str("catch ")?;
-                if let Some(exc) = exc {
-                    write!(f, "({})", exc)?;
-                }
-                write!(f, "{}", block)
-            }
-            ExprDef::TryCatch(ref try_block, ref catch_blocks, ref finally_block) => {
-                write!(f, "try {}", try_block)?;
-                for catch in catch_blocks {
-                    write!(f, " {}", catch)?;
-=======
             ExprDef::TryCatch(ref try_block, ref catch_block, ref finally_block) => {
                 write!(f, "try {} ", try_block)?;
                 if let Some((catch_binding, catch_expr)) = catch_block {
@@ -255,7 +235,6 @@ impl Display for ExprDef {
                         write!(f, "({}) ", exc)?;
                     }
                     write!(f, "{}", catch_expr)?;
->>>>>>> try_catch
                 }
                 if let Some(finally) = finally_block {
                     write!(f, "finally {}", finally)?;
