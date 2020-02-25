@@ -369,15 +369,16 @@ impl Parser {
                     Box::new(block),
                 )))
             }
+            // <tc39.es/ecma262/#sec-try-statement>
             Keyword::Try => {
                 let try_block = self.parse()?;
-                let mut catch_blocks = Vec::new();
+                let mut catch_block = None;
                 let mut finally_block = None;
 
                 loop {
                     let token = self.get_token(self.pos)?;
                     match token.data {
-                        TokenData::Keyword(Keyword::Catch) => {
+                        TokenData::Keyword(Keyword::Catch) if catch_block.is_none() => {
                             self.pos += 1;
                             let next_token = self.get_token(self.pos)?;
 
@@ -402,7 +403,11 @@ impl Parser {
                                         ));
                                     }
 
+<<<<<<< HEAD
                                     Some(Expr::new(ExprDef::Local(id.clone())))
+=======
+                                    Some(id.clone())
+>>>>>>> try_catch
                                 } else {
                                     return Err(ParseError::Expected(
                                         vec![TokenData::Identifier("identifier".to_string())],
@@ -415,12 +420,16 @@ impl Parser {
                             };
                             let block = self.parse()?;
 
+<<<<<<< HEAD
                             let catch_expr = Expr::new(ExprDef::CatchBlock(
                                 exc_var.map(Box::new),
                                 Box::new(block),
                             ));
 
                             catch_blocks.push(catch_expr);
+=======
+                            catch_block = Some((exc_var, Box::new(block)));
+>>>>>>> try_catch
                         }
                         TokenData::Keyword(Keyword::Finally) => {
                             // Set the finally block
@@ -432,20 +441,32 @@ impl Parser {
                     }
                 }
 
+<<<<<<< HEAD
                 if catch_blocks.is_empty() && finally_block.is_none() {
+=======
+                if catch_block.is_none() && finally_block.is_none() {
+>>>>>>> try_catch
                     todo!("SyntaxError: missing catch or finally after try")
                 } else {
                     Ok(Expr::new(ExprDef::TryCatch(
                         Box::new(try_block),
+<<<<<<< HEAD
                         catch_blocks,
+=======
+                        catch_block,
+>>>>>>> try_catch
                         finally_block,
                     )))
                 }
             }
+<<<<<<< HEAD
             _ => {
                 let token = self.get_token(self.pos - 1)?; // Gets the offending token
                 Err(ParseError::UnexpectedKeyword(keyword, token.pos))
             }
+=======
+            _ => Err(ParseError::UnexpectedKeyword(keyword)),
+>>>>>>> try_catch
         }
     }
 
