@@ -350,9 +350,10 @@ impl Parser {
                     Box::new(block),
                 )))
             }
+            // <tc39.es/ecma262/#sec-try-statement>
             Keyword::Try => {
                 let try_block = self.parse()?;
-                let mut catch_blocks = Vec::new();
+                let mut catch_block = None;
                 let mut finally_block = None;
 
                 loop {
@@ -383,7 +384,7 @@ impl Parser {
                                         ));
                                     }
 
-                                    Some(Expr::new(ExprDef::Local(id.clone())))
+                                    Some(id.clone())
                                 } else {
                                     return Err(ParseError::Expected(
                                         vec![TokenData::Identifier("identifier".to_string())],
@@ -396,12 +397,7 @@ impl Parser {
                             };
                             let block = self.parse()?;
 
-                            let catch_expr = Expr::new(ExprDef::CatchBlock(
-                                exc_var.map(Box::new),
-                                Box::new(block),
-                            ));
-
-                            catch_blocks.push(catch_expr);
+                            catch_block = Some((exc_var, Box::new(block)));
                         }
                         TokenData::Keyword(Keyword::Finally) => {
                             // Set the finally block
@@ -413,12 +409,12 @@ impl Parser {
                     }
                 }
 
-                if catch_blocks.is_empty() && finally_block.is_none() {
+                if catch_block.is_none() && finally_block.is_none() {
                     todo!("SyntaxError: missing catch or finally after try")
                 } else {
                     Ok(Expr::new(ExprDef::TryCatch(
                         Box::new(try_block),
-                        catch_blocks,
+                        catch_block,
                         finally_block,
                     )))
                 }
