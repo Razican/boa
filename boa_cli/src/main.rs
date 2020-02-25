@@ -24,11 +24,16 @@ pub fn main() -> Result<(), std::io::Error> {
     let realm = Realm::create();
     let mut engine = Executor::new(realm);
 
-    for file in args.files {
+    let mut file_iter = args.files.into_iter().peekable();
+    while let Some(file) = file_iter.next() {
         let buffer = read_to_string(file)?;
 
         match forward_val(&mut engine, &buffer) {
-            Ok(v) => print!("{}", v.to_string()),
+            Ok(v) => {
+                if file_iter.peek().is_none() {
+                    print!("{}", v.to_string())
+                }
+            }
             Err(v) => eprint!("{}", v.to_string()),
         }
     }

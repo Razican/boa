@@ -507,6 +507,9 @@ impl Executor for Interpreter {
                     ValueData::Function(_) => "function",
                 }))
             }
+            ExprDef::CatchBlock(_, _) | ExprDef::TryCatch(_, _, _) => {
+                todo!("try/catch block execution")
+            }
         }
     }
 }
@@ -761,7 +764,7 @@ impl Interpreter {
         }
     }
 
-    /// `extract_array_properties` converts an array object into a rust vector of Values.   
+    /// `extract_array_properties` converts an array object into a rust vector of Values.
     /// This is useful for the spread operator, for any other object an `Err` is returned
     fn extract_array_properties(&mut self, value: &Value) -> Result<Vec<Gc<ValueData>>, ()> {
         if let ValueData::Object(ref x) = *value.deref().borrow() {
@@ -833,7 +836,7 @@ mod tests {
             function foo(...a) {
                 return arguments;
             }
-            
+
             var result = foo(...a);
         "#;
         forward(&mut engine, scenario);

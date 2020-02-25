@@ -44,8 +44,10 @@ impl fmt::Display for ParseError {
     }
 }
 
+/// Result of a parsing operation.
 pub type ParseResult = Result<Expr, ParseError>;
 
+/// Structure that represents a parser.
 #[derive(Debug)]
 pub struct Parser {
     /// The tokens being input
@@ -55,12 +57,12 @@ pub struct Parser {
 }
 
 impl Parser {
-    /// Create a new parser, using `tokens` as input
+    /// Creates a new parser, using `tokens` as input.
     pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, pos: 0 }
     }
 
-    /// Parse all expressions in the token array
+    /// Parse all expressions in the token array.
     pub fn parse_all(&mut self) -> ParseResult {
         let mut exprs = Vec::new();
         while self.pos < self.tokens.len() {
@@ -71,12 +73,13 @@ impl Parser {
         Ok(Expr::new(ExprDef::Block(exprs)))
     }
 
+    /// Gets the token at the given position.
+    ///
+    /// # Errors
+    ///
+    /// It will fail with a `ParseError::AbruptEnd` if the position is out of bounds.
     fn get_token(&self, pos: usize) -> Result<Token, ParseError> {
-        if pos < self.tokens.len() {
-            Ok(self.tokens.get(pos).expect("failed getting token").clone())
-        } else {
-            Err(ParseError::AbruptEnd)
-        }
+        self.tokens.get(pos).cloned().ok_or(ParseError::AbruptEnd)
     }
 
     fn parse_function_parameters(&mut self) -> Result<Vec<Expr>, ParseError> {
@@ -346,6 +349,79 @@ impl Parser {
                     args,
                     Box::new(block),
                 )))
+            }
+            Keyword::Try => {
+                let try_block = self.parse()?;
+                let mut catch_blocks = Vec::new();
+                let mut finally_block = None;
+
+                loop {
+                    let token = self.get_token(self.pos)?;
+                    match token.data {
+                        TokenData::Keyword(Keyword::Catch) => {
+                            self.pos += 1;
+                            let next_token = self.get_token(self.pos)?;
+
+                            let exc_var = if let TokenData::Punctuator(Punctuator::OpenParen) =
+                                next_token.data
+                            {
+                                self.pos += 1;
+                                let ident_token = self.get_token(self.pos)?;
+                                if let TokenData::Identifier(ref id) = ident_token.data {
+                                    self.pos += 1;
+                                    let close_paren = self.get_token(self.pos)?;
+
+                                    if let TokenData::Punctuator(Punctuator::CloseParen) =
+                                        close_paren.data
+                                    {
+                                        self.pos += 1;
+                                    } else {
+                                        return Err(ParseError::Expected(
+                                            vec![TokenData::Punctuator(Punctuator::CloseParen)],
+                                            next_token,
+                                            "catch",
+                                        ));
+                                    }
+
+                                    Some(Expr::new(ExprDef::Local(id.clone())))
+                                } else {
+                                    return Err(ParseError::Expected(
+                                        vec![TokenData::Identifier("identifier".to_string())],
+                                        next_token,
+                                        "catch",
+                                    ));
+                                }
+                            } else {
+                                None
+                            };
+                            let block = self.parse()?;
+
+                            let catch_expr = Expr::new(ExprDef::CatchBlock(
+                                exc_var.map(Box::new),
+                                Box::new(block),
+                            ));
+
+                            catch_blocks.push(catch_expr);
+                        }
+                        TokenData::Keyword(Keyword::Finally) => {
+                            // Set the finally block
+                            let block = self.parse()?;
+                            finally_block = Some(Box::new(block));
+                            break;
+                        }
+                        _ => break,
+                    }
+                }
+
+                if catch_blocks.is_empty() && finally_block.is_none() {
+                    todo!("SyntaxError: missing catch or finally after try")
+                } else {
+                    Ok(Expr::new(ExprDef::TryCatch(
+                        Box::new(try_block),
+                        catch_blocks,
+                        finally_block,
+                    )))
+                }
             }
             _ => Err(ParseError::UnexpectedKeyword(keyword)),
         }
