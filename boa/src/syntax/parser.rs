@@ -359,7 +359,7 @@ impl Parser {
                 loop {
                     let token = self.get_token(self.pos)?;
                     match token.data {
-                        TokenData::Keyword(Keyword::Catch) => {
+                        TokenData::Keyword(Keyword::Catch) if catch_block.is_none() => {
                             self.pos += 1;
                             let next_token = self.get_token(self.pos)?;
 
