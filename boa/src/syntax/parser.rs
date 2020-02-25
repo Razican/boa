@@ -367,7 +367,7 @@ impl Parser {
                 )))
             }
             _ => {
-                let token = self.get_token(self.pos)?;
+                let token = self.get_token(self.pos - 1)?; // Gets the offending token
                 Err(ParseError::UnexpectedKeyword(keyword, token.pos))
             }
         }
