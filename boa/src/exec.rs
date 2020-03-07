@@ -540,6 +540,10 @@ impl Executor for Interpreter {
 
                 Ok(Gc::new(ValueData::Undefined))
             }
+            ExprDef::This => {
+                // <https://tc39.es/ecma262/#sec-resolvethisbinding>
+                todo!("resolve this binding");
+            }
         }
     }
 }

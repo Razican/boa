@@ -431,13 +431,19 @@ impl Parser {
                 if catch_block.is_none() && finally_block.is_none() {
                     todo!("SyntaxError: missing catch or finally after try")
                 } else {
-                    Ok(Expr::new(ExprDef::TryCatch(
+                    let expr = Expr::new(ExprDef::TryCatch(
                         Box::new(try_block),
                         catch_block,
                         finally_block,
-                    )))
+                    ));
+                    // dbg!(&expr);
+                    // println!("{}", expr);
+                    // panic!();
+
+                    Ok(expr)
                 }
             }
+            Keyword::This => Ok(Expr::new(ExprDef::This)),
             _ => {
                 let token = self.get_token(self.pos - 1)?; // Gets the offending token
                 Err(ParseError::UnexpectedKeyword(keyword, token.pos))

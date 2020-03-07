@@ -82,6 +82,8 @@ pub enum ExprDef {
         Option<(Option<String>, Box<Expr>)>,
         Option<Box<Expr>>,
     ),
+    /// `this` expression.
+    This,
 }
 
 impl Operator for ExprDef {
@@ -242,6 +244,7 @@ impl Display for ExprDef {
 
                 Ok(())
             }
+            ExprDef::This => f.write_str("this"),
         }
     }
 }

@@ -101,7 +101,7 @@ impl EnvironmentRecordTrait for GlobalEnvironmentRecord {
     fn create_mutable_binding(&mut self, name: String, deletion: bool) {
         if self.declarative_record.has_binding(&name) {
             // TODO: change to exception
-            panic!("Binding already exists!");
+            panic!("Binding {} already exists!", name);
         }
 
         self.declarative_record
