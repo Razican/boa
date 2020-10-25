@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RegExp","The internal representation on a `RegExp` object."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["async_function_decl",""],["function_decl",""]],"struct":[["HoistableDeclaration","Hoistable declaration parsing."]]});

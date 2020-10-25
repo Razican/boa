@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Block","Variable declaration list parsing."]],"type":[["BlockStatement","A `BlockStatement` is equivalent to a `Block`."]]});
